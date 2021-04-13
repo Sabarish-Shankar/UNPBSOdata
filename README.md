@@ -1,6 +1,6 @@
 # UNPBSO Datatasks
 
- Milestone 1: DHS Availability of data: Use rdhs package or website to create a summary table of data available by country and year for:
+ Milestone 1: DHS Availability of data: Use rdhs package or website to create a summary table of data available by country, region wise and year for:
 - Infant or under 5 mortality rate
 - Literacy Rate
 - Average/median per capita income 
