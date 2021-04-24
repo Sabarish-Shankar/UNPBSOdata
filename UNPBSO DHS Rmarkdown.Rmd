@@ -1,0 +1,91 @@
+---
+title: "UNPBSO Indicators"
+output: html_document
+---
+
+```{r}
+setwd("D:/Documentos/David Lopez Soto/Chicago_MA/2021 Spring/Policy Lab/0_Data")
+getwd()
+
+
+pacman::p_load(rdhs, sjPlot, sjmisc, sjlabelled, tm, tidyverse, tidytext, textdata, psych,
+  rvest, wordcloud, reshape2, dplyr, stringi, psych, syuzhet,
+  d3scatter, scatterD3, crosstalk, heatmaply, countrycode,
+  streamgraph, Hmisc, mice, zeallot, data.table, dplyr, tidyverse,
+  ggplot2,   RColorBrewer, ggthemes, scales, corrplot, kableExtra
+)
+
+```
+
+
+There are a total of 22 level 1 indicators in the data.
+The level 3 indicators are "Women","Children","Men","Children (unw)","Households","Nets","Population","Both sexes" 
+There are 265 level 2 indicators.
+
+**Explore indicators by level**
+
+```{r}
+# Store DHS indicators
+indicators <- dhs_indicators()
+
+# View all indicators by level 
+View(indicators%>%select(Definition, Level1, Level2, Level3, Label, Denominator))
+
+# Print Level 1 indicators names 
+print(unique(indicators$Level1))
+#unique(indicators$Level2)
+#unique(indicators$Level3)
+
+# Explore the indicators contained in your chosen Level 1 indicators. 
+level1 = c("Fertility", "Employment")
+View(indicators %>% 
+       filter(Level1 == level1) %>%
+       select(Definition, Level1, Level2, Level3, Label, Denominator)
+       )
+
+```
+Shortlisted indicators: Women total, Number of Women, 
+Median Number of years of education; Youth Characteristics; 
+
+```{r}
+# Download infant mortality data for your country. The country codes are AF (Afghanistan), AO (Angola), CO (Colombia), GU (Guatemala), IA (India), MW (Malawi),
+# RW (Rwanda), SN (Senegal), TZ (Tanzania), ZW (Zimbabwe)
+d <- dhs_data(indicatorIds = "CM_ECMR_C_IMR", # This is the code for infant mortality rate
+              surveyYearStart = 2005, # Only want 2015 survey
+              surveyYearEnd = 2006,
+              breakdown = "subnational") # We want the subnational breakdown
+
+
+```
+
+**Correlation Matrix** 
+
+```{r Correlation Matrix}
+# 1. Compute the matrix of correlations
+
+panel_red <- select(df, "onset", "battle_deaths", "wom_part", "state_jobs", "soc_ind", "rep_disadv_bin", "proportion_excluded", "power_sg", "population", "pol_ind", "libdem_score", "inequality_power", "gend_civlib", "gdp", "ethpol", "ethfrag", "econ_ind", "civ_libgrp", "acc_pserv", "business_group")
+
+cormat <- round(cor(panel_red, use= "pairwise.complete.obs"), 2)
+head(cormat)
+get_lower_tri <- function(cormat){cormat[upper.tri(cormat)] <- NA
+return(cormat)
+}        # Get lower triangle of the Correlation Matrix
+get_upper_tri <- function(cormat){cormat[lower.tri(cormat)] <- NA
+return(cormat)
+}          # Get upper triangle of the Correlation Matrix
+
+upper_tri <- get_upper_tri(cormat)
+lower_tri <- get_lower_tri(cormat)
+melted_cormat <- melt(lower_tri, na.rm = TRUE)
+
+# 2. Heatmap
+
+ggheatmap <- ggplot(data=melted_cormat, aes(Var1, Var2, fill=value)) + #
+  geom_tile(color="white") + #
+  scale_fill_gradient2(low= "blue", high= "red" , mid="white", midpoint = 0, limit= c(-1,1), space="Lab", name= "Pearson\nCorrelation") + #
+  theme_minimal()+ theme(axis.text.x= element_text( angle = 45, vjust=1, size= 12, hjust=1)) + #
+  coord_fixed()
+ggheatmap + geom_text(aes(Var1, Var2, label=value), color="black", size=4)
+
+```
+
